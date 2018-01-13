@@ -94,8 +94,13 @@ def find_review_ids(hid, url):
 
 
 def review_index_is_valid(hid):
-    with taDB(common.TA_DB) as db:
-        record = db.read_a_hotel(hid)
+    record = None
+    # Accessing sqlite DB here can happen
+    # together with the DB access in gather_review_ids. 
+    # We thus add a lock to protect against the potential race conditions.
+    with lock:
+        with taDB(common.TA_DB) as db:
+            record = db.read_a_hotel(hid)
     if record is not None:
         rno = record[3]
         rid_str = record[4]
